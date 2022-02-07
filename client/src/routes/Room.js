@@ -1,55 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import socketio from "socket.io-client";
 import Peer from "simple-peer";
-import styled from "styled-components";
-
-const Container = styled.div`
-    padding: 20px;
-    display: flex;
-    width: 90%;
-    margin: auto;
-    flex-wrap: wrap;
-`;
-
-const Container2 = styled.div`
-    display: flex;
-    flex-direction: column;
-    width: 90%;
-    margin: auto;
-`;
-
-const Button = styled.button`
-    width: 200px;
-    padding: 20px;
-    background-color: red;
-    color: white;
-    outline: none;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-`;
-
-const StyledVideo = styled.video`
-    height: 40%;
-    width: 50%;
-`;
-
-const Video = (props) => {
-    const ref = useRef();
-
-    useEffect(() => {
-        if (props.peer.on){
-            props.peer.on("stream", stream => {
-                ref.current.srcObject = stream;
-            })
-        }
-    }, [props.peer]);
-
-    return (
-        <StyledVideo playsInline autoPlay ref={ref} />
-    );
-}
-
+import Video from '../components/Video';
+import styles from './room.module.css';
+import styles2 from '../components/video.module.css';
 
 const videoConstraints = {
     height: window.innerHeight / 2,
@@ -100,7 +54,6 @@ const Room = (props) => {
 
         socketRef.current.on('user left', payload => {
             console.log(`User ${payload.userLeaving} disconnected`)
-            //peersRef.current.filter(p => p.peerId !== payload.leavingUser)
             const leavingPeer = peersRef.current.find(p => p.peerId === payload.userLeaving);
             leavingPeer.peer.destroy();
             peersRef.current = peersRef.current.filter(p => p.peerId !== payload.userLeaving);
@@ -139,29 +92,33 @@ const Room = (props) => {
     }
 
     const onLeaveCall = () => {
-        //setPeers([])
         socketRef.current.emit('user disconnect')
         props.history.push('/');
     }
 
     return (
-        <Container2>
-            <Container>
-                <StyledVideo muted ref={userVideo} autoPlay playsInline />
-                {peers.map((peer, index) => {
-                    return (
-                        <Video key={index} peer={peer} />
-                    );
-                })}
+        <div className={styles.mainContainer}>
+            <div className={styles.contentContainer}>
+                <div className={styles.roomTitle}>TimGibson's Room</div>
+                <div className={styles.videoContainer}>
+                    <video className={styles2.video} muted ref={userVideo} autoPlay playsInline />
+                    {peers.map((peer, index) => {
+                        return (
+                            <Video key={index} peer={peer} />
+                        );
+                    })}
+                </div>
+                <div className={styles.controls}>
+                    <button
+                        className={styles.leaveButton}
+                        onClick={onLeaveCall}
+                    >
+                        End Call
+                    </button>
+                </div>
 
-
-            </Container>
-            <Button
-                onClick={onLeaveCall}
-            >
-                Leave call
-            </Button>
-        </Container2>
+            </div>
+        </div>
 
     );
 };
